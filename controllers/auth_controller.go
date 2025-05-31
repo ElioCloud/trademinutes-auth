@@ -51,3 +51,38 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("✅ User inserted:", user.Email)
 	w.Write([]byte("User registered successfully"))
 }
+func LoginHandler(w http.ResponseWriter, r *http.Request) {
+	collection := config.GetDB().Collection("MyClusterCol")
+
+	var input models.User
+	var foundUser models.User
+
+	err := json.NewDecoder(r.Body).Decode(&input)
+	if err != nil {
+		http.Error(w, "Invalid input", http.StatusBadRequest)
+		return
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	err = collection.FindOne(ctx, bson.M{"email": input.Email}).Decode(&foundUser)
+	if err != nil {
+		http.Error(w, "User not found", http.StatusUnauthorized)
+		return
+	}
+
+	if !utils.CheckPasswordHash(input.Password, foundUser.Password) {
+		http.Error(w, "Invalid password", http.StatusUnauthorized)
+		return
+	}
+
+	token, err := utils.GenerateJWT(foundUser.Email)
+	if err != nil {
+		http.Error(w, "Failed to generate token", http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]string{"token": token})
+}
