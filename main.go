@@ -24,6 +24,7 @@ func main() {
 
 	// Connect to MongoDB
 	config.ConnectDB()
+	fmt.Println("✅ Connected to MongoDB:", db.Name())
 
 	// Set up router
 	router := mux.NewRouter()
