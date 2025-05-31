@@ -13,6 +13,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 	"trademinutes-auth/config"
 	"trademinutes-auth/models"
+	"trademinutes-auth/utils"
 )
 
 func ForgotPasswordHandler(w http.ResponseWriter, r *http.Request) {
