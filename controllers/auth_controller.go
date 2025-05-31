@@ -48,7 +48,7 @@ if err != nil {
     http.Error(w, "Insert failed", http.StatusInternalServerError)
     return
 }
-
+fmt.Printf("Trying to insert user: %+v\n", user)
 	fmt.Println("User inserted:", user.Email)
 	w.Write([]byte("User registered successfully"))
 }
