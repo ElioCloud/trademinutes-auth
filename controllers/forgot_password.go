@@ -61,3 +61,57 @@ func sendEmail(to, subject, body string) {
 
 	_ = smtp.SendMail(os.Getenv("SMTP_HOST")+":"+os.Getenv("SMTP_PORT"), auth, from, []string{to}, msg)
 }
+
+
+func ResetPasswordHandler(w http.ResponseWriter, r *http.Request) {
+	var req struct {
+		Token       string `json:"token"`
+		NewPassword string `json:"newPassword"`
+	}
+
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil || req.Token == "" || req.NewPassword == "" {
+		http.Error(w, "Invalid request", http.StatusBadRequest)
+		return
+	}
+
+	// Parse the token
+	secret := []byte(os.Getenv("JWT_RESET_SECRET"))
+	token, err := jwt.Parse(req.Token, func(token *jwt.Token) (interface{}, error) {
+		return secret, nil
+	})
+
+	if err != nil || !token.Valid {
+		http.Error(w, "Invalid or expired token", http.StatusUnauthorized)
+		return
+	}
+
+	claims, ok := token.Claims.(jwt.MapClaims)
+	if !ok || claims["email"] == nil {
+		http.Error(w, "Invalid token claims", http.StatusUnauthorized)
+		return
+	}
+
+	email := claims["email"].(string)
+	collection := config.GetDB().Collection("MyClusterCol")
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	hashedPassword, err := utils.HashPassword(req.NewPassword)
+	if err != nil {
+		http.Error(w, "Password hashing failed", http.StatusInternalServerError)
+		return
+	}
+
+	_, err = collection.UpdateOne(ctx,
+		bson.M{"email": email},
+		bson.M{"$set": bson.M{"password": hashedPassword}},
+	)
+
+	if err != nil {
+		http.Error(w, "Failed to update password", http.StatusInternalServerError)
+		return
+	}
+
+	w.Write([]byte("Password updated successfully"))
+}
