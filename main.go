@@ -15,10 +15,12 @@ import (
 
 func main() {
 	// Load .env file
+	if os.Getenv("ENV") != "production" {
 	err := godotenv.Load()
 	if err != nil {
-		log.Fatal("❌ Error loading .env file")
+		log.Println(".env file not found, assuming production environment variables")
 	}
+}
 
 	// Connect to MongoDB
 	config.ConnectDB()
