@@ -14,13 +14,13 @@ import (
 )
 
 func RegisterHandler(w http.ResponseWriter, r *http.Request) {
-	collection := config.GetDB().Collection("MyClusterCol") // ✅ moved inside handler
+	collection := config.GetDB().Collection("MyClusterCol")
 
 	var user models.User
 
 	err := json.NewDecoder(r.Body).Decode(&user)
 	if err != nil {
-		fmt.Println("❌ JSON decode error:", err)
+		fmt.Println("JSON decode error:", err)
 		http.Error(w, "Invalid input", http.StatusBadRequest)
 		return
 	}
@@ -86,6 +86,7 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(map[string]string{"token": token})
 }
+
 func ProfileHandler(w http.ResponseWriter, r *http.Request) {
 	email := r.Context().Value(middleware.EmailKey).(string)
 
