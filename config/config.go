@@ -19,17 +19,17 @@ func ConnectDB() {
 
 	client, err := mongo.Connect(ctx, options.Client().ApplyURI(os.Getenv("MONGO_URI")))
 	if err != nil {
-		log.Fatal("❌ MongoDB Connect Error:", err)
+		log.Fatal("MongoDB Connect Error:", err)
 	}
 
 	// Ping the database
 	err = client.Ping(ctx, nil)
 	if err != nil {
-		log.Fatal("❌ MongoDB Ping Error:", err)
+		log.Fatal("MongoDB Ping Error:", err)
 	}
 
 	DB = client.Database(os.Getenv("DB_NAME"))
-	fmt.Println("✅ Connected to MongoDB")
+	fmt.Println("Connected to MongoDB")
 }
 
 func GetDB() *mongo.Database {
