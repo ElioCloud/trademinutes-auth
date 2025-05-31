@@ -1,8 +1,11 @@
 package routes
 
 import (
+	"net/http"                          // required for http.HandlerFunc
+	"trademinutes-auth/controllers"     // controller handlers
+	"trademinutes-auth/middleware"      // JWT middleware
+
 	"github.com/gorilla/mux"
-	"trademinutes-auth/controllers"
 )
 
 func AuthRoutes(router *mux.Router) {
@@ -10,5 +13,7 @@ func AuthRoutes(router *mux.Router) {
 
 	authRouter.HandleFunc("/register", controllers.RegisterHandler).Methods("POST")
 	authRouter.HandleFunc("/login", controllers.LoginHandler).Methods("POST")
+	authRouter.Handle("/profile", middleware.JWTAuthMiddleware(http.HandlerFunc(controllers.ProfileHandler))).Methods("GET")
+
 
 }

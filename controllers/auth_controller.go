@@ -9,7 +9,7 @@ import (
 	"trademinutes-auth/config"
 	"trademinutes-auth/models"
 	"trademinutes-auth/utils"
-
+	"trademinutes-auth/middleware"
 	"go.mongodb.org/mongo-driver/bson"
 )
 
@@ -85,4 +85,11 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(map[string]string{"token": token})
+}
+func ProfileHandler(w http.ResponseWriter, r *http.Request) {
+	email := r.Context().Value(middleware.EmailKey).(string)
+
+	json.NewEncoder(w).Encode(map[string]string{
+		"email": email,
+	})
 }
