@@ -14,5 +14,7 @@ func AuthRoutes(router *mux.Router) {
 	authRouter.HandleFunc("/login", controllers.LoginHandler).Methods("POST")
 	authRouter.Handle("/profile", middleware.JWTAuthMiddleware(http.HandlerFunc(controllers.ProfileHandler))).Methods("GET")
 	authRouter.HandleFunc("/forgot-password", controllers.ForgotPasswordHandler).Methods("POST")
+	authRouter.HandleFunc("/reset-password", controllers.ResetPasswordHandler).Methods("POST")
+
 
 }
