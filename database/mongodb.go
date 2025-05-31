@@ -23,16 +23,16 @@ func ConnectDB() {
 	var err error
 	client, err = mongo.Connect(ctx, options.Client().ApplyURI(uri))
 	if err != nil {
-		log.Fatalf("❌ MongoDB Connect Error: %v", err)
+		log.Fatalf("MongoDB Connect Error: %v", err)
 	}
 
 	// Ping the database
 	if err := client.Ping(ctx, nil); err != nil {
-		log.Fatalf("❌ MongoDB Ping Error: %v", err)
+		log.Fatalf("MongoDB Ping Error: %v", err)
 	}
 
 	db = client.Database(dbName)
-	log.Println("✅ Connected to MongoDB")
+	log.Println("Connected to MongoDB")
 }
 
 func GetDB() *mongo.Database {

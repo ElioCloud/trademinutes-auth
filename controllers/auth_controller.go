@@ -48,9 +48,10 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	fmt.Println("✅ User inserted:", user.Email)
+	fmt.Println("User inserted:", user.Email)
 	w.Write([]byte("User registered successfully"))
 }
+
 func LoginHandler(w http.ResponseWriter, r *http.Request) {
 	collection := config.GetDB().Collection("MyClusterCol")
 

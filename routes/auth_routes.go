@@ -10,10 +10,7 @@ import (
 
 func AuthRoutes(router *mux.Router) {
 	authRouter := router.PathPrefix("/api/auth").Subrouter()
-
 	authRouter.HandleFunc("/register", controllers.RegisterHandler).Methods("POST")
 	authRouter.HandleFunc("/login", controllers.LoginHandler).Methods("POST")
 	authRouter.Handle("/profile", middleware.JWTAuthMiddleware(http.HandlerFunc(controllers.ProfileHandler))).Methods("GET")
-
-
 }
