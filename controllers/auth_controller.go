@@ -89,8 +89,21 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 
 func ProfileHandler(w http.ResponseWriter, r *http.Request) {
 	email := r.Context().Value(middleware.EmailKey).(string)
+	collection := config.GetDB().Collection("MyClusterCol")
 
-	json.NewEncoder(w).Encode(map[string]string{
-		"email": email,
-	})
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	var user models.User
+	err := collection.FindOne(ctx, bson.M{"email": email}).Decode(&user)
+	if err != nil {
+		http.Error(w, "User not found", http.StatusNotFound)
+		return
+	}
+
+	// Never return password!
+	user.Password = ""
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(user)
 }
