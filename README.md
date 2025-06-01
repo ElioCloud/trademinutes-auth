@@ -20,7 +20,7 @@ This is a simple user authentication API built with **Go** and **MongoDB**, usin
 ### 1. Clone the repository
 
 ```bash
-git clone https://github.com/yourusername/trademinutes-auth.git
+git clone https://github.com/ElioCloud/trademinutes-auth
 cd trademinutes-auth
 
 ```
