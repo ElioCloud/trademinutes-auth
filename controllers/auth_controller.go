@@ -45,10 +45,10 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 	_, err = collection.InsertOne(ctx, user)
 if err != nil {
     fmt.Println("❌ Insert error:", err) // 👈 this line
-    http.Error(w, "Insert failed", http.StatusInternalServerError)
+    http.Error(w, fmt.Sprintf("Insert failed: %v", err), http.StatusInternalServerError)
     return
 }
-fmt.Printf("Trying to insert user: %+v\n", user)
+
 	fmt.Println("User inserted:", user.Email)
 	w.Write([]byte("User registered successfully"))
 }
