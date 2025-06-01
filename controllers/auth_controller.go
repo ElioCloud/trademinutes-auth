@@ -12,46 +12,53 @@ import (
 	"trademinutes-auth/middleware"
 	"go.mongodb.org/mongo-driver/bson"
 )
-
 func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 	collection := config.GetDB().Collection("MyClusterCol")
 
 	var user models.User
-
 	err := json.NewDecoder(r.Body).Decode(&user)
 	if err != nil {
-		fmt.Println("JSON decode error:", err)
 		http.Error(w, "Invalid input", http.StatusBadRequest)
 		return
 	}
 
 	fmt.Println("➡️ Incoming email:", user.Email)
 
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	// Extend context timeout for slow cloud insertions
+	ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
 	defer cancel()
 
-	err = collection.FindOne(ctx, bson.M{"email": user.Email}).Err()
-	if err == nil {
+	// 🔍 Check if user already exists
+	count, err := collection.CountDocuments(ctx, bson.M{"email": user.Email})
+	if err != nil {
+		fmt.Println("❌ Count check failed:", err)
+		http.Error(w, "Database error", http.StatusInternalServerError)
+		return
+	}
+	if count > 0 {
 		http.Error(w, "User already exists", http.StatusConflict)
 		return
 	}
 
+	// 🔐 Hash the password
 	user.Password, err = utils.HashPassword(user.Password)
 	if err != nil {
 		http.Error(w, "Hashing failed", http.StatusInternalServerError)
 		return
 	}
 
-	_, err = collection.InsertOne(ctx, user)
-if err != nil {
-    fmt.Println("❌ Insert error:", err) // 👈 this line
-    http.Error(w, fmt.Sprintf("Insert failed: %v", err), http.StatusInternalServerError)
-    return
-}
+	// 📝 Insert the new user
+	res, err := collection.InsertOne(ctx, user)
+	if err != nil {
+		fmt.Println("❌ Insert error:", err)
+		http.Error(w, "Insert failed: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
 
-	fmt.Println("User inserted:", user.Email)
+	fmt.Println("✅ User inserted:", user.Email, "ID:", res.InsertedID)
 	w.Write([]byte("User registered successfully"))
 }
+
 
 func LoginHandler(w http.ResponseWriter, r *http.Request) {
 	collection := config.GetDB().Collection("MyClusterCol")
