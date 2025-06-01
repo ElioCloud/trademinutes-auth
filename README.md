@@ -39,22 +39,22 @@ Create a .env file in the root directory with the following:
 PORT=8080
 
 # MongoDB Atlas
-MONGO_URI=mongodb+srv://mathewsteven1996:steven123@mycluster.wxbgwit.mongodb.net/?retryWrites=true&w=majority&appName=MyCluster
-DB_NAME=MyClusterDB
+MONGO_URI=
+DB_NAME=
 
 # JWT Secrets
-JWT_SECRET=your_super_secret
-JWT_RESET_SECRET=your_reset_secret
+JWT_SECRET=
+JWT_RESET_SECRET=
 
 # Mailtrap SMTP for Password Reset Emails
-SMTP_HOST=sandbox.smtp.mailtrap.io
-SMTP_PORT=2525
-SMTP_USER=dd4b13d9c51309
-SMTP_PASS=84a203810ee0fc
-EMAIL_FROM=no-reply@trademinutes.com
+SMTP_HOST=
+SMTP_PORT=
+SMTP_USER=
+SMTP_PASS=
+EMAIL_FROM=
 
 # Frontend URL (for reset password links)
-FRONTEND_URL=http://localhost:3000
+FRONTEND_URL=
 
 ```
 
