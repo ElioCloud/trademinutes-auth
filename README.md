@@ -35,9 +35,27 @@ go mod tidy
 Create a .env file in the root directory with the following:
 
 ```bash
-MONGO_URI=mongodb://localhost:27017
-DB_NAME=authdb
-JWT_SECRET=your_jwt_secret_key
+# App Config
+PORT=8080
+
+# MongoDB Atlas
+MONGO_URI=mongodb+srv://mathewsteven1996:steven123@mycluster.wxbgwit.mongodb.net/?retryWrites=true&w=majority&appName=MyCluster
+DB_NAME=MyClusterDB
+
+# JWT Secrets
+JWT_SECRET=your_super_secret
+JWT_RESET_SECRET=your_reset_secret
+
+# Mailtrap SMTP for Password Reset Emails
+SMTP_HOST=sandbox.smtp.mailtrap.io
+SMTP_PORT=2525
+SMTP_USER=dd4b13d9c51309
+SMTP_PASS=84a203810ee0fc
+EMAIL_FROM=no-reply@trademinutes.com
+
+# Frontend URL (for reset password links)
+FRONTEND_URL=http://localhost:3000
+
 ```
 
 Run the server
