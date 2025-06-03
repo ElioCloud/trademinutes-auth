@@ -91,7 +91,6 @@ func ResetPasswordHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	log.Println("JWT token parsed successfully")
 
-	// Extract email from token claims
 	claims, ok := token.Claims.(jwt.MapClaims)
 	if !ok || claims["email"] == nil {
 		log.Println("Invalid token claims or missing email")
