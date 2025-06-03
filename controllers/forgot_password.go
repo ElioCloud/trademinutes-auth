@@ -63,56 +63,76 @@ func sendEmail(to, subject, body string) {
 	_ = smtp.SendMail(os.Getenv("SMTP_HOST")+":"+os.Getenv("SMTP_PORT"), auth, from, []string{to}, msg)
 }
 
-
 func ResetPasswordHandler(w http.ResponseWriter, r *http.Request) {
+	log.Println("ResetPasswordHandler invoked")
+
 	var req struct {
 		Token       string `json:"token"`
 		NewPassword string `json:"newPassword"`
 	}
 
+	// Decode request body
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil || req.Token == "" || req.NewPassword == "" {
+		log.Printf("Invalid request body: err=%v, token=%s, newPassword=%s", err, req.Token, req.NewPassword)
 		http.Error(w, "Invalid request", http.StatusBadRequest)
 		return
 	}
+	log.Println("Request body decoded successfully")
 
-	// Parse the token
+	// Parse the JWT token
 	secret := []byte(os.Getenv("JWT_RESET_SECRET"))
 	token, err := jwt.Parse(req.Token, func(token *jwt.Token) (interface{}, error) {
 		return secret, nil
 	})
-
 	if err != nil || !token.Valid {
+		log.Printf("Token parse error or invalid token: err=%v, valid=%v", err, token.Valid)
 		http.Error(w, "Invalid or expired token", http.StatusUnauthorized)
 		return
 	}
+	log.Println("JWT token parsed successfully")
 
+	// Extract email from token claims
 	claims, ok := token.Claims.(jwt.MapClaims)
 	if !ok || claims["email"] == nil {
+		log.Println("Invalid token claims or missing email")
 		http.Error(w, "Invalid token claims", http.StatusUnauthorized)
 		return
 	}
-
 	email := claims["email"].(string)
+	log.Printf("Token claims extracted: email=%s", email)
+
+	// Get DB collection
 	collection := config.GetDB().Collection("MyClusterCol")
+	log.Println("MongoDB collection accessed")
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
+	// Hash the new password
 	hashedPassword, err := utils.HashPassword(req.NewPassword)
 	if err != nil {
+		log.Printf("Password hashing failed: err=%v", err)
 		http.Error(w, "Password hashing failed", http.StatusInternalServerError)
 		return
 	}
+	log.Println("Password hashed successfully")
 
-	_, err = collection.UpdateOne(ctx,
+	// Update password in DB
+	res, err := collection.UpdateOne(ctx,
 		bson.M{"email": email},
 		bson.M{"$set": bson.M{"password": hashedPassword}},
 	)
-
 	if err != nil {
+		log.Printf("Failed to update password in DB: err=%v", err)
 		http.Error(w, "Failed to update password", http.StatusInternalServerError)
 		return
 	}
+	if res.MatchedCount == 0 {
+		log.Printf("No user found with email: %s", email)
+		http.Error(w, "User not found", http.StatusNotFound)
+		return
+	}
+	log.Printf("Password updated successfully for email: %s", email)
 
 	w.Write([]byte("Password updated successfully"))
 }
