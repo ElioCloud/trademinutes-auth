@@ -27,7 +27,7 @@ func ForgotPasswordHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Check if user exists
 	collection := config.GetDB().Collection("MyClusterCol")
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
 	defer cancel()
 
 	var user models.User
