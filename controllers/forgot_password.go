@@ -8,7 +8,7 @@ import (
 	"net/smtp"
 	"os"
 	"time"
-
+	"log"
 	"github.com/golang-jwt/jwt/v5"
 	"go.mongodb.org/mongo-driver/bson"
 	"trademinutes-auth/config"
