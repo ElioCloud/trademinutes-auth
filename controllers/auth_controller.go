@@ -25,7 +25,7 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("➡️ Incoming email:", user.Email)
 
 	// Extend context timeout for slow cloud insertions
-	ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 
 	// 🔍 Check if user already exists
