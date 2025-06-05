@@ -40,7 +40,7 @@ func ForgotPasswordHandler(w http.ResponseWriter, r *http.Request) {
 	// Generate reset token
 	resetToken := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"email": req.Email,
-		"exp":   time.Now().Add(15 * time.Minute).Unix(),
+		"exp":   time.Now().Add(40 * time.Minute).Unix(),
 	})
 	secret := []byte(os.Getenv("JWT_RESET_SECRET"))
 	tokenString, _ := resetToken.SignedString(secret)
