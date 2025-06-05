@@ -104,7 +104,7 @@ func ResetPasswordHandler(w http.ResponseWriter, r *http.Request) {
 	collection := config.GetDB().Collection("MyClusterCol")
 	log.Println("MongoDB collection accessed")
 
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
 	defer cancel()
 
 	// Hash the new password
