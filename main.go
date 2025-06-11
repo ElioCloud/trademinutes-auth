@@ -14,7 +14,13 @@ import (
 )
 func CORSMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Access-Control-Allow-Origin", "https://eliocloud.netlify.app")
+		origin := r.Header.Get("Origin")
+
+		// Allow only known origins
+		if origin == "https://eliocloud.netlify.app" || origin == "http://localhost:3000" {
+			w.Header().Set("Access-Control-Allow-Origin", origin)
+		}
+
 		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
 		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
 
