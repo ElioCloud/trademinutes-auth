@@ -61,47 +61,39 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 
 
 func LoginHandler(w http.ResponseWriter, r *http.Request) {
-    collection := config.GetDB().Collection("MyClusterCol")
+	collection := config.GetDB().Collection("MyClusterCol")
 
-    var input models.User
-    var foundUser models.User
+	var input models.User
+	var foundUser models.User
 
-    err := json.NewDecoder(r.Body).Decode(&input)
-    if err != nil {
-        w.Header().Set("Content-Type", "application/json")
-        w.WriteHeader(http.StatusBadRequest)
-        json.NewEncoder(w).Encode(map[string]string{"error": "Invalid input"})
-        return
-    }
+	err := json.NewDecoder(r.Body).Decode(&input)
+	if err != nil {
+		http.Error(w, "Invalid input", http.StatusBadRequest)
+		return
+	}
 
-    ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-    defer cancel()
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
 
-    err = collection.FindOne(ctx, bson.M{"email": input.Email}).Decode(&foundUser)
-    if err != nil {
-        w.Header().Set("Content-Type", "application/json")
-        w.WriteHeader(http.StatusUnauthorized)
-        json.NewEncoder(w).Encode(map[string]string{"error": "User not found"})
-        return
-    }
+	err = collection.FindOne(ctx, bson.M{"email": input.Email}).Decode(&foundUser)
+	if err != nil {
+		http.Error(w, "User not found", http.StatusUnauthorized)
+		return
+	}
 
-    if !utils.CheckPasswordHash(input.Password, foundUser.Password) {
-        w.Header().Set("Content-Type", "application/json")
-        w.WriteHeader(http.StatusUnauthorized)
-        json.NewEncoder(w).Encode(map[string]string{"error": "Invalid password"})
-        return
-    }
+	if !utils.CheckPasswordHash(input.Password, foundUser.Password) {
+		http.Error(w, "Invalid password", http.StatusUnauthorized)
+		return
+	}
 
-    token, err := utils.GenerateJWT(foundUser.Email)
-    if err != nil {
-        w.Header().Set("Content-Type", "application/json")
-        w.WriteHeader(http.StatusInternalServerError)
-        json.NewEncoder(w).Encode(map[string]string{"error": "Failed to generate token"})
-        return
-    }
+	token, err := utils.GenerateJWT(foundUser.Email)
+	if err != nil {
+		http.Error(w, "Failed to generate token", http.StatusInternalServerError)
+		return
+	}
 
-    w.Header().Set("Content-Type", "application/json")
-    json.NewEncoder(w).Encode(map[string]string{"token": token})
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]string{"token": token})
 }
 
 func ProfileHandler(w http.ResponseWriter, r *http.Request) {
@@ -114,11 +106,9 @@ func ProfileHandler(w http.ResponseWriter, r *http.Request) {
 	var user models.User
 	err := collection.FindOne(ctx, bson.M{"email": email}).Decode(&user)
 	if err != nil {
-    w.Header().Set("Content-Type", "application/json")
-    w.WriteHeader(http.StatusNotFound)
-    json.NewEncoder(w).Encode(map[string]string{"error": "User not found"})
-    return
-}
+		http.Error(w, "User not found", http.StatusNotFound)
+		return
+	}
 
 	// Never return password!
 	user.Password = ""
@@ -136,11 +126,9 @@ func GitHubOAuthHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
-    w.Header().Set("Content-Type", "application/json")
-    w.WriteHeader(http.StatusBadRequest)
-    json.NewEncoder(w).Encode(map[string]string{"error": "Invalid input"})
-    return
-}
+		http.Error(w, "Invalid input", http.StatusBadRequest)
+		return
+	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
@@ -156,21 +144,17 @@ func GitHubOAuthHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		if _, err := collection.InsertOne(ctx, user); err != nil {
-    w.Header().Set("Content-Type", "application/json")
-    w.WriteHeader(http.StatusInternalServerError)
-    json.NewEncoder(w).Encode(map[string]string{"error": "Failed to register user"})
-    return
-}
+			http.Error(w, "Failed to register user", http.StatusInternalServerError)
+			return
+		}
 	}
 
 	// Issue your own JWT
 	token, err := utils.GenerateJWT(input.Email)
 	if err != nil {
-    w.Header().Set("Content-Type", "application/json")
-    w.WriteHeader(http.StatusInternalServerError)
-    json.NewEncoder(w).Encode(map[string]string{"error": "Failed to generate token"})
-    return
-}
+		http.Error(w, "Failed to generate token", http.StatusInternalServerError)
+		return
+	}
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(map[string]string{"token": token})
