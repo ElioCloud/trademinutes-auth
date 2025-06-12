@@ -5,13 +5,12 @@ import (
 	"encoding/json"
 	"net/http"
 	"time"
-	"fmt"
 	"trademinutes-auth/config"
 	"trademinutes-auth/models"
 	"trademinutes-auth/utils"
-	"trademinutes-auth/middleware"
 	"go.mongodb.org/mongo-driver/bson"
 )
+
 
 // Helper to send consistent JSON error responses
 func writeJSONError(w http.ResponseWriter, message string, code int) {
