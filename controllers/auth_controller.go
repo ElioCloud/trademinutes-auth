@@ -116,3 +116,46 @@ func ProfileHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(user)
 }
+
+func GitHubOAuthHandler(w http.ResponseWriter, r *http.Request) {
+	collection := config.GetDB().Collection("MyClusterCol")
+
+	var input struct {
+		Email string `json:"email"`
+		Name  string `json:"name"`
+	}
+
+	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
+		http.Error(w, "Invalid input", http.StatusBadRequest)
+		return
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	var user models.User
+	err := collection.FindOne(ctx, bson.M{"email": input.Email}).Decode(&user)
+	if err != nil {
+		// Register the user
+		user = models.User{
+			Email:    input.Email,
+			Name:     input.Name,
+			Password: "", // No password since this is GitHub OAuth
+		}
+
+		if _, err := collection.InsertOne(ctx, user); err != nil {
+			http.Error(w, "Failed to register user", http.StatusInternalServerError)
+			return
+		}
+	}
+
+	// Issue your own JWT
+	token, err := utils.GenerateJWT(input.Email)
+	if err != nil {
+		http.Error(w, "Failed to generate token", http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]string{"token": token})
+}
