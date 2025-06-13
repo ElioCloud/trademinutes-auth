@@ -3,6 +3,7 @@ package controllers
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"time"
 
@@ -84,11 +85,13 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	fmt.Println("🔐 Logging in:", foundUser.Email)
 	token, err := utils.GenerateJWT(foundUser.Email)
 	if err != nil {
 		writeJSONError(w, "Failed to generate token", http.StatusInternalServerError)
 		return
 	}
+	fmt.Println("✅ Token issued:", token)
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(map[string]string{"token": token})
@@ -96,7 +99,10 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 
 // ✅ ProfileHandler
 func ProfileHandler(w http.ResponseWriter, r *http.Request) {
-	email := r.Context().Value(middleware.EmailKey).(string)
+	rawEmail := r.Context().Value(middleware.EmailKey)
+	fmt.Println("📥 Email from JWT context:", rawEmail)
+
+	email := rawEmail.(string)
 	collection := config.GetDB().Collection("MyClusterCol")
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
@@ -108,13 +114,13 @@ func ProfileHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user.Password = "" // Do not expose password
+	user.Password = "" // Never expose password
+	fmt.Println("✅ Profile found for:", user.Email)
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(user)
 }
 
-// ✅ GitHubOAuthHandler
 func GitHubOAuthHandler(w http.ResponseWriter, r *http.Request) {
 	collection := config.GetDB().Collection("MyClusterCol")
 
@@ -124,9 +130,12 @@ func GitHubOAuthHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
+		fmt.Println("❌ Failed to decode GitHub input:", err)
 		writeJSONError(w, "Invalid input", http.StatusBadRequest)
 		return
 	}
+
+	fmt.Println("📩 GitHub Login for:", input.Email)
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
@@ -134,24 +143,28 @@ func GitHubOAuthHandler(w http.ResponseWriter, r *http.Request) {
 	var user models.User
 	err := collection.FindOne(ctx, bson.M{"email": input.Email}).Decode(&user)
 	if err != nil {
-		// If not found, register
+		fmt.Println("👤 New GitHub user, registering:", input.Email)
 		user = models.User{
 			Email:    input.Email,
 			Name:     input.Name,
 			Password: "",
 		}
 		if _, err := collection.InsertOne(ctx, user); err != nil {
-			writeJSONError(w, "Failed to register user", http.StatusInternalServerError)
+			fmt.Println("❌ Failed to insert GitHub user:", err)
+			writeJSONError(w, "Registration failed", http.StatusInternalServerError)
 			return
 		}
 	}
 
+	// 🧪 Generate JWT
 	token, err := utils.GenerateJWT(input.Email)
 	if err != nil {
-		writeJSONError(w, "Token generation failed", http.StatusInternalServerError)
+		fmt.Println("❌ Token generation failed:", err)
+		writeJSONError(w, "Token error", http.StatusInternalServerError)
 		return
 	}
 
+	fmt.Println("✅ GitHub JWT issued:", token)
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(map[string]string{"token": token})
 }
