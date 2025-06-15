@@ -1,3 +1,4 @@
+
 # TradeMinutes Auth API
 
 This is a simple user authentication API built with **Go** and **MongoDB**, using **JWT** for session management. It includes registration, login, and protected routes.
@@ -19,7 +20,7 @@ This is a simple user authentication API built with **Go** and **MongoDB**, usin
 ### 1. Clone the repository
 
 ```bash
-git clone https://github.com/yourusername/trademinutes-auth.git
+git clone https://github.com/ElioCloud/trademinutes-auth
 cd trademinutes-auth
 
 ```
@@ -34,9 +35,27 @@ go mod tidy
 Create a .env file in the root directory with the following:
 
 ```bash
-MONGO_URI=mongodb://localhost:27017
-DB_NAME=authdb
-JWT_SECRET=your_jwt_secret_key
+# App Config
+PORT=8080
+
+# MongoDB Atlas
+MONGO_URI=
+DB_NAME=
+
+# JWT Secrets
+JWT_SECRET=
+JWT_RESET_SECRET=
+
+# Mailtrap SMTP for Password Reset Emails
+SMTP_HOST=
+SMTP_PORT=
+SMTP_USER=
+SMTP_PASS=
+EMAIL_FROM=
+
+# Frontend URL (for reset password links)
+FRONTEND_URL=
+
 ```
 
 Run the server
@@ -45,5 +64,3 @@ Run the server
 go run main.go
 ```
 
- 
- 
