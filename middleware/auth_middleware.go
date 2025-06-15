@@ -2,6 +2,7 @@ package middleware
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"os"
 	"strings"
@@ -9,37 +10,48 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 )
 
-type key string
+type contextKey string
 
-const EmailKey key = "email"
+const EmailKey contextKey = "email"
 
 func JWTAuthMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		authHeader := r.Header.Get("Authorization")
-		if !strings.HasPrefix(authHeader, "Bearer ") {
-			http.Error(w, "Missing or invalid token", http.StatusUnauthorized)
+		fmt.Println("🛡️ Authorization Header:", authHeader)
+
+		if authHeader == "" || !strings.HasPrefix(authHeader, "Bearer ") {
+			fmt.Println("❌ Missing or invalid Authorization header")
+			http.Error(w, "Unauthorized", http.StatusUnauthorized)
 			return
 		}
 
-		tokenStr := strings.TrimPrefix(authHeader, "Bearer ")
-		secret := []byte(os.Getenv("JWT_SECRET"))
+		tokenString := strings.TrimPrefix(authHeader, "Bearer ")
+		fmt.Println("🔐 Token received:", tokenString)
 
-		token, err := jwt.Parse(tokenStr, func(token *jwt.Token) (interface{}, error) {
+		secret := []byte(os.Getenv("JWT_SECRET"))
+		fmt.Println("🧪 JWT_SECRET in Middleware:", os.Getenv("JWT_SECRET"))
+
+		token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
 			return secret, nil
 		})
+
 		if err != nil || !token.Valid {
+			fmt.Println("❌ Token validation error:", err)
 			http.Error(w, "Unauthorized", http.StatusUnauthorized)
 			return
 		}
 
 		claims, ok := token.Claims.(jwt.MapClaims)
 		if !ok || claims["email"] == nil {
-			http.Error(w, "Invalid token claims", http.StatusUnauthorized)
+			fmt.Println("❌ Invalid token claims")
+			http.Error(w, "Unauthorized", http.StatusUnauthorized)
 			return
 		}
 
-		// Pass email into request context
-		ctx := context.WithValue(r.Context(), EmailKey, claims["email"].(string))
+		email := claims["email"].(string)
+		fmt.Println("✅ JWT valid for:", email)
+
+		ctx := context.WithValue(r.Context(), EmailKey, email)
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }
