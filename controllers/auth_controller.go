@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"trademinutes-auth/config"
-	"trademinutes-auth/models"
+	"github.com/ElioCloud/shared-models/models"
 	"trademinutes-auth/utils"
 	"trademinutes-auth/middleware"
 	"go.mongodb.org/mongo-driver/bson"
